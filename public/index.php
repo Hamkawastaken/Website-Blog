@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Blog</title>
-    <link rel="stylesheet" href="./../src/css/output.css" />
+    <link rel="stylesheet" href="../src/css/output.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -17,8 +17,8 @@
       <div class="bg-white shadow-xl">
         <div class="flex justify-between items-center px-8 md:px-24 py-4">
           <div class="logo flex justify-center items-center gap-x-4">
-            <a href="index.php"><img src="../images/logo.png" class="w-52 hidden md:block" /></a>
-            <a href="index.php"><img src="../images/logo-mobile.png" class="w-12 md:hidden" /> </a>
+            <img src="../images/logo.png" class="w-52 hidden md:block" />
+            <img src="../images/logo-mobile.png" class="w-12 md:hidden" />
             <div class="icon-search py-1 px-2 rounded-full bg-[#F8F9FA]">
               <a
                 href=""
