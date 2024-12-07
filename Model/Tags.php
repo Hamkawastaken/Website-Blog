@@ -18,6 +18,20 @@ class Tags extends Model {
         return parent::allData($this->table);
     }
 
+    public function all_id($id)
+    {
+        $query = "SELECT posts.*,
+                categories.name_category, 
+                users.full_name AS author_name 
+                FROM posts 
+                JOIN categories ON posts.category_id = categories.id_category 
+                JOIN users ON posts.user_id = users.id_user 
+                WHERE posts.user_id = '$id' 
+                ORDER BY title";
+        $result = mysqli_query($this->db, $query);
+        return parent::convertData($result);
+    }
+
     public function find($id)
     {
         return parent::findData($id, $this->primary_key, $this->table);

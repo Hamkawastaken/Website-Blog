@@ -1,12 +1,12 @@
 <?php
 
-require_once __DIR__ . '../../../../Model/Model.php';
-require_once __DIR__ . '../../../../Model/Users.php';
+require_once __DIR__ . '../../Model/Model.php';
+require_once __DIR__ . '../../Model/Users.php';
 
 $user = new User();
 
 if(isset($_SESSION["full_name"])) {
-    header("Location: ../dashboard/dashboard.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -15,7 +15,7 @@ if(isset($_POST['submit'])) {
         "post" => $_POST,
         "files" => $_FILES
     ];
-    $result = $user->register_dashboard($data);
+    $result = $user->register($data);
 
     if (gettype($result) == "string") {
         echo '<script type="text/javascript">
@@ -39,7 +39,7 @@ if(isset($_POST['submit'])) {
         icon: "success"
         });
         setTimeout(() => {
-            window.location.href = "../dashboard/dashboard.php";
+            window.location.href = "login.php";
         }, 2000)
     })
     </script>';
@@ -66,7 +66,8 @@ if(isset($_POST['submit'])) {
   rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <!-- Core Css -->
-<link rel="stylesheet" href="../assets/css/theme.css" />
+ 
+<link rel="stylesheet" href="../public/admin/assets/css/theme.css" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   .swal2-confirm {
@@ -84,8 +85,8 @@ if(isset($_POST['submit'])) {
                   
                     <div class="justify-center items-center w-full card lg:flex max-w-md ">
                         <div class=" w-full card-body">
-                                <a href="" class="py-4 block"><img src="../../../images/logo-mobile.png" alt="" class="mx-auto"/></a>
-                                <p class="mb-4 text-gray-500 text-sm text-center">Dashboard Blog Admin</p>
+                                <a href="" class="py-4 block"><img src="../images/logo-mobile.png" alt="" class="mx-auto"/></a>
+                                <p class="mb-4 text-gray-500 text-sm text-center">Programmer Blog</p>
                             <!-- form -->
                             <form action="" method="post" enctype="multipart/form-data">
 

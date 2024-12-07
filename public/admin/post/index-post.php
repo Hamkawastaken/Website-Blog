@@ -14,11 +14,16 @@ $posts = new Post();
 
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1; 
-$limit = 3; 
+$limit = 6; 
 $start = ($page - 1) * $limit;
 $totalData = count($posts->all()); 
 $totalPages = ceil($totalData / $limit); 
-$posts = $posts->all2($start, $limit);
+$posts = $posts->all_3($start, $limit);
+
+
+
+// var_dump($posts);
+// die;
 
 ?>
 
@@ -40,6 +45,60 @@ $posts = $posts->all2($start, $limit);
 <!-- Core Css -->
 <link rel="stylesheet" href="../assets/css/theme.css" />
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  .grid {
+    display: grid;
+  }
+
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+@media (min-width: 768px) {
+    .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+  .gap-3 {
+    gap: 1.2rem;
+  }
+
+  .gap-x {
+    -moz-column-gap: 1.2rem;
+    column-gap: 0.5rem;
+  }
+
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+
+  .category {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    width: fit-content;
+    border-radius: 5px;
+    padding: 4px 8px;
+    background-color: #f0f0f0;
+  }
+
+  .bg-green-600 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(5 150 105 / var(--tw-bg-opacity));
+  }
+
+  .bg-green-700 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(4 120 87 / var(--tw-bg-opacity));
+  }
+
+  .bg-red-600 {
+    --tw-bg-opacity: 1;
+    background-color: rgb(220 38 38 / var(--tw-bg-opacity));
+  }
+</style>
 	<title>Tags</title>
 </head>
 
@@ -105,110 +164,44 @@ $posts = $posts->all2($start, $limit);
 				<!--  Header End -->
 
 				<!-- Main Content -->
-          <main class="h-full overflow-y-auto  max-w-full  pt-4">
-            <div class="container full-container py-5 flex flex-col gap-6">
-              <div class="card">
-                <div class="card-body flex flex-col gap-6">
-                  <div class="flex justify-between items-center">
-                  <h6 class="text-lg text-gray-600 font-semibold">Posts List</h6>
-                  <div class="input-group">
-                  <input type="text" id="search" placeholder="Search Post" class="h-10 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded focus:ring-red-500 focus:border-red-500 block w-full p-2.5" style="border-radius: 999px;">
+        
+        <main class="h-full overflow-y-auto  max-w-full  pt-4">
+          <div class="container full-container py-5 flex flex-col gap-6">
+            <div class="card">
+              <h6 class="text-lg text-gray-600 font-semibold card-body">Posts List</h6>
+              <div class="card-body grid grid-cols-1 md:grid-cols-3 gap-5">
+                <?php foreach ($posts as $post) : ?>
+                  <div class="card overflow-hidden">
+                    <div class=" bg-white">
+                      <img class="w-full rounded-t-xl" style="height: 200px;" src="../../../images/<?= $post['attachment']?>" alt="Image Description">
+                        <div class="card-body">
+                          <h3 class="text-lg font-medium text-gray-700"><?= $post['title']?></h3>
+                          <p class="mt-1 text-sm text-gray-500 pr-10 "><?= $post['full_name']?></p>
+                          <div class="category mt-4">
+                            <a href="">
+                              <p class="text-sm text-gray-500"><?= $post['name_category']?></p>
+                            </a>
+                          </div>
+                          <div class="tags mt-4 flex flex-wrap gap-x">
+                            <?php $tags = explode(',', $post['tags']);
+                                foreach ($tags as $tag) :?>
+                            <a href="">
+                              <p class="text-sm text-gray-500">#<?= $tag?></p>
+                            </a>
+                            <?php endforeach;?>
+                          </div>
+                          <a class="mt-4 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-md border border-transparent bg-blue-600 text-white" href="./detail-post.php?id=<?=$post['id_post']?>"><i class="ti ti-eye"></i>Details</a>
+                          <a class="mt-4 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-md border border-transparent bg-green-600 text-white" href="./edit-post.php?id=<?=$post['id_post']?>"><i class="ti ti-pencil"></i>Edit</a>
+                          <a class="mt-4 py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-md border border-transparent bg-red-600 text-white" href="./delete-post.php?id=<?=$post['id_post']?>" onclick="return alertDelete(event, '<?= $post['id_post']?>')"><i class="ti ti-trash"></i>Delete</a>
+                        </div>
+                    </div>                                                
                   </div>
-                  </div>
-              <div class="grid grid-cols-1 gap-y-6">
-              <div class="col-span-2">
-                <div class="card h-full bg-gray-300">
-                  <div class="card-body">
-                    <div id="content" class="relative overflow-x-auto">
-                      <!-- table -->
-                      <table class="text-left w-full whitespace-nowrap text-sm">
-                        <thead class="text-gray-700">
-                          <tr class="font-semibold text-gray-600">
-                            <th scope="col" class="p-4">Id</th>
-                            <th scope="col" class="p-4">Post Title</th>
-                            <th scope="col" class="p-4">Image</th>
-                            <th scope="col" class="p-4">Author</th>
-                            <th scope="col" class="p-4">Category</th>
-                            <th scope="col" class="p-4">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <?php $no = ($page - 1) * $limit;?>
-                          <?php foreach ($posts as $post) :?>
-                          <?php $no++;?>
-              <tr>
-              <td class="p-4 font-semibold text-gray-600"><?= $no?></td>
-              <td class="p-4">
-                              <div class="flex flex-col gap-1">
-                                  <h3 class="font-semibold text-gray-600"><?= $post['title']?></h3>
-                </div>
-              </td>
-              <td class="p-4">
-                              <div class="flex flex-col gap-1">
-                                  <img src="../../../images/<?= $post['attachment']?>" alt="" style="width: 64px; height: 48px; object-fit: cover;">
-                </div>
-              </td>
-              <td class="p-4">
-                              <div class="flex flex-col gap-1">
-                                  <h3 class="font-semibold text-gray-600"><?= $post['full_name']?></h3>
-                </div>
-              </td>
-              <td class="p-4">
-                              <div class="flex flex-col gap-1">
-                                  <h3 class="font-semibold text-gray-600"><?= $post['name_category']?></h3>
-                </div>
-              </td>
-              <td class="p-4 flex gap-x-1">
-                              <button class="inline-flex items-center py-[10px] px-[10px] rounded-2xl font-semibold text-white" style="background-color: rgb(2 132 199);"><a href="detail-post.php?id=<?=$post['id_post']?>">Details</a><i class="ti ti-eye" style="margin-left: 4px;"></i></button>
-                              <button class="inline-flex items-center py-[10px] px-[10px] rounded-2xl font-semibold text-white" style="background-color: rgb(34 197 94);"><a href="edit-post.php?id=<?=$post['id_post']?>">Edit</a><i class="ti ti-pencil" style="margin-left: 4px;"></i></button>
-                              <button class="inline-flex items-center py-[10px] px-[10px] rounded-2xl font-semibold text-white" style="background-color: rgb(239 68 68);" onclick="return alertDelete(event, '<?= $post['id_post']?>')">Delete<i class="ti ti-trash" style="margin-left: 4px;" ></i></button>
-              </td>
-              </tr>
-                          <?php endforeach;?>
-                        </tbody>
-                      </table>
-                    </div>		
-                  <div class="flex mt-4 gap-x-2">
-                    <!-- Tombol Previous -->
-                    <li style="list-style: none;" class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                      <a href="<?= $page > 1 ? '?page=' . ($page - 1) : '#' ?>" 
-                        class="page-link px-4 py-2 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-100 hover:text-blue-600 
-                        <?= $page <= 1 ? 'cursor-not-allowed opacity-50' : '' ?>">
-                        Previous
-                      </a>
-                    </li>
-
-                    <!-- Nomor Halaman -->
-                    <?php for ($i = 1; $i <= $totalPages; $i++) : ?>
-                      <li style="list-style: none;" class="page-item <?= $page == $i ? 'active' : '' ?>">
-                        <a href="?page=<?= $i ?>" 
-                          class="page-link px-4 py-2 border rounded-md 
-                          <?= $page == $i ? 'text-white bg-blue-600 border-blue-600' : 'text-gray-600 bg-white hover:bg-gray-100 hover:text-blue-600' ?>">
-                          <?= $i ?>
-                        </a>
-                      </li>
-                    <?php endfor; ?>
-
-                    <!-- Tombol Next -->
-                    <li style="list-style: none;" class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-                      <a href="<?= $page < $totalPages ? '?page=' . ($page + 1) : '#' ?>" 
-                        class="page-link px-4 py-2 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-100 hover:text-blue-600 
-                        <?= $page >= $totalPages ? 'cursor-not-allowed opacity-50' : '' ?>">
-                        Next
-                      </a>
-                    </li>
-                  </div>
-                
-                  </div>
-                </div>
-                </div>
-              </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  <?php endforeach;?>
             </div>
-          </main>
+          </div>
+        </div>
+      </main>
+
 				<!-- Main Content End -->
 			</div>
 		</div>

@@ -8,10 +8,13 @@ class Post extends Model {
     protected $table = "posts";
     protected $primary_key = "id_post";
 
-    public function create($data)
-    {
 
+    public function create($data) 
+    {
         $attachment = null;
+
+        
+        $tags_id = explode(',', $data["post"]["tags"][0]);   
 
         if(isset($data['files']['attachment']) && $data['files']['attachment']['error'] == UPLOAD_ERR_OK) {
             $name_file = $data['files']['attachment']['name'];
@@ -42,12 +45,22 @@ class Post extends Model {
             'category_id' => $data['post']['category'],
             'user_id' => $data['post']['user_id']
         ];
-
+        
         if($attachment) {
             $data['attachment'] = $attachment;
         }
 
-        return parent::createData($data, $this->table);
+        parent::createData($data, $this->table);
+
+        $query_id = mysqli_insert_id($this->db);
+        foreach ($tags_id as $tag) {
+            $query = "INSERT INTO pivot_posts_tags (post_id_pivot, tag_id_pivot) VALUES ('$query_id', '$tag')";
+
+            $result = mysqli_query($this->db, $query);
+        };
+
+        return $data;   
+        
     }
 
     public function all()
@@ -60,47 +73,48 @@ class Post extends Model {
         return parent::findData($id, $this->primary_key, $this->table);
     }
 
-    public function update($id, $data) 
+    public function update($id, $datas)
     {
-        $attachment = null;
-
-        if(isset($data['files']['attachment']) && $data['files']['attachment']['error'] == UPLOAD_ERR_OK) {
-            $name_file = $data['files']['attachment']['name'];
-            $tmp_name = $data['files']['attachment']['tmp_name'];
-            $ekstensi_file = pathinfo($name_file, PATHINFO_EXTENSION);
-            $ekstensi_allowed = ["jpg", "png", "jpeg", "gif", "webp", "heic"];
-
-            if(!in_array(strtolower($ekstensi_file), $ekstensi_allowed)) {
-                return "Invalid File Type";
+        $tags_id = $datas["post"]["tags"];
+        $attachment = '';
+        if ($datas["files"]["attachment"]["name"] !== '') {
+            $nama_file = $datas["files"]["attachment"]["name"];
+            $tmp_name = $datas["files"]["attachment"]["tmp_name"];
+            $ekstensi_file = pathinfo($nama_file, PATHINFO_EXTENSION);
+            $ekstensi_allowed = ["jpg", "png", "heic", "gif", "webp", "raw"];
+            if (!in_array($ekstensi_file, $ekstensi_allowed)) {
+                return "Ektensi file tidak sesuai";
             }
 
-            if($data['files']['attachment']['size'] > 2000000) {
-                return "File too large";
+            if ($datas["files"]["attachment"]["size"] > 5000000) {
+                return "Ukuran file tidak boleh lebih dari 5MB";
             }
 
-            $name_file = uniqid() . "." . $ekstensi_file;
-            if(!move_uploaded_file($tmp_name, "../images/" . $name_file)) {
-                return "Failed to upload file";
-            }
-
-            $attachment = $name_file;
+            $nama_file = random_int(1000, 9999) . "." . $ekstensi_file;
+            move_uploaded_file($tmp_name, "./../public/img/konten/" . $nama_file);
+            $attachment = $nama_file;
         }
 
-        $data = [
-            'title' => $data['post']['title'],
-            'content' => $data['post']['content'],
-            'attachment' => $data['post']['attachment'],
-            'category_id' => $data['post']['category'],
-            'user_id' => $data['post']['user_id']
+        $datas = [
+            "title" => $datas["post"]["title"],
+            "content" => $datas["post"]["content"],
+            "user_id" => $datas["post"]["user_id"],
+            "category_id" => $datas["post"]["category_id"],
         ];
 
-        if($attachment) {
-            $data['attachment'] = $attachment;
+        if ($attachment !== '') {
+            $datas["attachment"] = $attachment;
         }
+        parent::updateData($this->table, $id, $datas, $this->primary_key);
 
-        return parent::updateData($id, $this->primary_key, $data, $this->table);
+        $query_delete = "DELETE FROM pivot_posts_tags WHERE post_id_pivot = '$id'";
+        $result_delete = mysqli_query($this->db, $query_delete);
+
+        foreach ($tags_id as $tag) {
+            $query_insert = "INSERT INTO pivot_posts_tags (post_id_pivot, tag_id_pivot) VALUES ('$id', '$tag')";
+            $result = mysqli_query($this->db, $query_insert);
+        };
     }
-
     public function delete($id) 
     {
         return parent::deleteData($id, $this->primary_key, $this->table);
@@ -137,6 +151,14 @@ class Post extends Model {
     public function all_id($id) 
     {
         $query = "SELECT posts.*, categories.name_category, user.full_name, AS author_name FROM posts JOIN categories ON posts.category_id = categories.id_category JOIN user ON posts.user_id = user.id_user WHERE posts.user_id = $id ORDER BY title";
+    }
+
+    public function all_3($start, $limit)
+    {
+      // ambil semua data post dengan semua tag yan ada di pivot_posts_tags
+      $query = "SELECT categories.id_category, categories.name_category, user.id_user, user.full_name, user.password, user.email, user.bio, user.title, user.gender, user.avatar, user.phone, posts.id_post, posts.title, posts.content, posts.attachment, posts.user_id, posts.category_id, GROUP_CONCAT(tags.name_tag SEPARATOR ', ') AS tags FROM posts JOIN pivot_posts_tags ON posts.id_post = pivot_posts_tags.post_id_pivot JOIN tags ON pivot_posts_tags.tag_id_pivot = tags.id_tag JOIN categories ON posts.category_id = categories.id_category JOIN user ON posts.user_id = user.id_user WHERE posts.id_post = pivot_posts_tags.post_id_pivot GROUP BY posts.id_post, posts.title, posts.attachment, posts.content, categories.name_category, user.full_name, user.avatar LIMIT $start, $limit";
+      $result = mysqli_query($this->db, $query);
+      return $this->convertData($result);
     }
 
 }

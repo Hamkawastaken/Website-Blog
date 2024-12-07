@@ -11,7 +11,7 @@ if(isset($_SESSION["full_name"])) {
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<nav class=" w-full bg-gray-800  flex items-center justify-between" aria-label="Global">
+<nav class=" w-fullbg-gray-800  flex items-center justify-between" aria-label="Global">
             <ul class="icon-nav flex items-center gap-4">
                 <li class="relative xl:hidden">
                     <a class="text-xl  icon-hover cursor-pointer text-heading"

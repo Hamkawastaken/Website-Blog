@@ -11,7 +11,7 @@ if(!isset($_SESSION["full_name"])) {
 $tags = new Tags();
 
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1; 
-$limit = 3; 
+$limit = 5; 
 $start = ($page - 1) * $limit;
 $totalData = count($tags->all()); 
 $totalPages = ceil($totalData / $limit); 

@@ -13,9 +13,18 @@ if(!isset($_SESSION["full_name"])) {
 $categories = new Category();
 $posts = new Post();
 $tags = new Tags();
-$all_blog = new Tags();
+$all_blog = new Post();
 
-$all_blog = $all_blog->all_blog();
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1; 
+$limit = 6; 
+$start = ($page - 1) * $limit;
+$totalData = count($posts->all()); 
+$totalPages = ceil($totalData / $limit); 
+
+$all_blog = $all_blog->all_3($start, $limit);
+
+// var_dump($all_blog);
+// die;
 
 ?>
 
@@ -183,14 +192,10 @@ $all_blog = $all_blog->all_blog();
 														<span class="font-normal  text-gray-500"><?= $data['full_name']?></span>
 													</td>
 													<td class="p-4">
-                                                        <div class="flex flex-col gap-1">
-                                                            <h3 class=" font-semibold text-gray-600"><?= $data['name_category']?></h3>
-														</div>
+														<span class="font-normal  text-gray-500"><?= $data['name_category']?></span>
 													</td>
 													<td class="p-4">
-                                                        <div class="flex flex-col gap-1">
-                                                            <h3 class=" font-semibold text-gray-600"><?= $data['name_tag']?></h3>
-														</div>
+														<span class="font-normal  text-gray-500"><?= $data['tags']?></span>
 													</td>
 												</tr>
 												<?php $no++?>

@@ -1,3 +1,10 @@
+<?php
+
+require_once __DIR__ . '/../DB/Connection.php';
+require_once __DIR__ . '/../Model/Model.php';
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,6 +17,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body class="bg-[#F8F9FA] font-opensans overflow-x-hidden">
 
@@ -17,7 +25,9 @@
       <div class="bg-white shadow-xl">
         <div class="flex justify-between items-center px-8 md:px-24 py-4">
           <div class="logo flex justify-center items-center gap-x-4">
-            <img src="../images/logo.png" class="w-52 hidden md:block" />
+            <a href="index.php" class="hidden md:flex justify-center items-center gap-x-4">
+              <img src="../images/logo-mobile.png" class="w-12 hidden md:block" />
+            </a>
             <img src="../images/logo-mobile.png" class="w-12 md:hidden" />
             <div class="icon-search py-1 px-2 rounded-full bg-[#F8F9FA]">
               <a
@@ -27,9 +37,6 @@
             </div>
           </div>
           <div class="navigasi flex gap-x-4 justify-center items-center">
-            <div>
-              <a href=""><img src="../images/user1.png" class="w-12 mr-2" /></a>
-            </div>
             <div class="icon-bell">
               <a href="" class="fa-solid fa-bell text-2xl text-[#808385]"></a>
             </div>
@@ -45,9 +52,9 @@
         class="menu-accordion bg-white px-8 md:px-24 py-4 hidden"
       >
         <ul class="space-y-4">
-          <li><a href="" class="text-[#595C5F] text-sm font-bold">HOME</a></li>
+          <li><a href="index.php" class="text-[#595C5F] text-sm font-bold">HOME</a></li>
           <li>
-            <a href="" class="text-[#595C5F] text-sm font-bold relative"
+            <a href="index.php" class="text-[#595C5F] text-sm font-bold relative"
               >BERITA
               <span
                 class="absolute -top-2 text-[10px] bg-red-600 text-white px-2 rounded-full"
@@ -55,9 +62,9 @@
               >
             </a>
           </li>
-          <li><a href="" class="text-[#595C5F] text-sm font-bold">AKUN</a></li>
+          <li><a href="detail-author.php" class="text-[#595C5F] text-sm font-bold">AKUN</a></li>
           <li>
-            <a href="" class="text-[#595C5F] text-sm font-bold">KONTAK</a>
+            <a href="contact.php" class="text-[#595C5F] text-sm font-bold">KONTAK</a>
           </li>
         </ul>
       </div>
@@ -69,51 +76,58 @@
           <div class="profile-info col-span-1">
             <div class="profile mx-8 bg-white rounded-xl shadow-xl h-fit py-4">
               <div class="account">
-                <img src="../images/user1.png" class="w-32 mx-auto" />
-                <p class="text-[#14A7A0] text-center text-sm font-bold">
-                  ROOKIE III
-                </p>
-                <h2 class="text-center font-bold text-lg px-8">
-                  MUHAMMAD HAMKA RIFAI
-                </h2>
+                <?php if(isset($_SESSION['id_user'])): ?>
+                    <img src="../images/<?= $_SESSION['avatar'] ?? '../images/default-avatar.png'; ?>" class="w-24 h-24 object-cover mx-auto rounded-full" />
+                    <p class="text-[#14A7A0] text-center text-sm font-bold mt-2">
+                        <?php echo $_SESSION['user_level'] ?? 'ROOKIE I'; ?>
+                    </p>
+                    <h2 class="text-center font-bold text-lg px-8">
+                        <?php echo $_SESSION['full_name'] ?? 'Anonymous User'; ?>
+                    </h2>
+                <?php else: ?>
+                    <img src="../images/default-avatar.jpg" class="w-24 h-24 object-cover mx-auto rounded-full" />
+                    <p class="text-[#14A7A0] text-center text-sm font-bold mt-2">
+                        Belum Ada Peringkat
+                    </p>
+                    <h2 class="text-center font-bold text-lg px-8">
+                        Anonymous
+                    </h2>
+                <?php endif; ?>
                 <hr class="mx-4 my-2" />
               </div>
               <div class="navigation">
                 <ul class="space-y-6 mt-6">
                   <li class="px-6 text-[#595C5F] font-semibold">
-                    <a href=""
+                    <a href="detail-author.php"
                       ><i class="fa-solid fa-user mr-2"></i>My Profile</a
                     >
                   </li>
                   <li class="px-6 text-[#595C5F] font-semibold">
-                    <a href=""
+                    <a href="detail-author.php"
                       ><i class="fa-solid fa-comments mr-2"></i>My Blog</a
                     >
                   </li>
-                  <li class="px-6 text-[#595C5F] font-semibold">
-                    <a href=""
-                      ><i class="fa-solid fa-bookmark mr-2"></i>My Bookmark</a
-                    >
-                  </li>
-                  <li class="px-6 text-[#595C5F] font-semibold">
-                    <a href=""
-                      ><i class="fa-solid fa-circle-question mr-2"></i>My
-                      Questions</a
-                    >
-                  </li>
+                  <?php if(!isset($_SESSION['id_user'])): ?>
+                    <li class="px-6 text-[#595C5F] font-semibold">
+                      <a href="register.php"
+                        ><i class="fa-solid fa-right-to-bracket mr-2"></i>Login</a
+                      >
+                    </li>
+                  <?php else: ?>
+                    <li class="px-6 text-[#595C5F] font-semibold">
+                      <button onclick="return confirmLogout(event)">
+                        <i class="fa-solid fa-ban mr-2"></i>Logout
+                      </button>
+                    </li>
+                  <?php endif; ?>
                 </ul>
                 <hr class="mx-4 mt-4 mb-2" />
                 <div class="buttons flex flex-col justify-center items-center">
-                  <button
-                    class="rounded-lg w-44 px-3 py-2 mt-2 border border-[#595C5F] text-[#595C5F]"
-                  >
-                    Gabung Komunitas
-                  </button>
-                  <button
-                    class="rounded-lg w-44 px-3 py-2 mt-2 border border-[#595C5F] text-[#595C5F]"
-                  >
+                  <a href="contact.php">
+                  <button class="rounded-lg w-44 px-3 py-2 mt-2 border border-[#595C5F] text-[#595C5F]">
                     Butuh Bantuan?
                   </button>
+                  </a>
                 </div>
               </div>
             </div>
@@ -606,5 +620,26 @@
 </footer>
 
     <script src="script.js"></script>
+    <script>
+      function confirmLogout(event) {
+        event.preventDefault();
+
+        Swal.fire({
+          title: "Apakah Anda yakin?",
+          text: "Anda akan keluar dari akun ini",
+          icon: "warning", 
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Ya, Logout",
+          cancelButtonText: "Batal"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Redirect ke halaman logout
+            window.location.href = "logout.php";
+          }
+        });
+      }
+    </script>
   </body>
 </html>

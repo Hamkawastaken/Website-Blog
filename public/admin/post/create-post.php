@@ -5,6 +5,7 @@ require_once __DIR__ . '../../../../Model/Model.php';
 require_once __DIR__ . '../../../../Model/Post.php';
 require_once __DIR__ . '../../../../Model/Users.php';
 require_once __DIR__ . '../../../../Model/Category.php';
+require_once __DIR__ . '../../../../Model/Tags.php';
 
 if(!isset($_SESSION["full_name"])) {
   header("Location: ../auth/login.php");
@@ -13,6 +14,9 @@ if(!isset($_SESSION["full_name"])) {
 
 $categories = new Category();
 $categories = $categories->all();
+
+$tags = new Tags();
+$tags = $tags->all();
 
 $users = new User();
 $users = $users->all();
@@ -81,12 +85,84 @@ if(strlen(($_POST["title"])) > 255){
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <!-- Core Css -->
 <link rel="stylesheet" href="../assets/css/theme.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .swal2-confirm {
     background-color: rgb(14 165 233);
     color: white;        
   }
+
+  /* Container */
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.mt-5 {
+  margin-top: 1.25rem; /* 20px */
+}
+.w-full {
+  width: 100%;
+}
+.max-w-md {
+  max-width: 28rem; /* 448px */
+}
+
+/* Label */
+.block {
+  display: block;
+}
+.text-sm {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+.font-medium {
+  font-weight: 500;
+}
+.text-gray-700 {
+  color: #374151;
+}
+.mb-1 {
+  margin-bottom: 0.25rem; /* 4px */
+}
+
+/* Select */
+.p-2 {
+  padding: 0.5rem; /* 8px */
+}
+.border {
+  border-width: 1px;
+}
+.border-gray-300 {
+  border-color: #d1d5db;
+}
+.rounded-md {
+  border-radius: 0.375rem; /* 6px */
+}
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.focus\:ring-blue-500:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #3b82f6; /* Ring effect */
+}
+.focus\:border-blue-500:focus {
+  border-color: #3b82f6;
+}
+.sm\:text-sm {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+/* Hint Text */
+.mt-2 {
+  margin-top: 0.5rem; /* 8px */
+}
+.text-gray-500 {
+  color: #6b7280;
+}
+
 </style>
 </style>
 	<title>Category</title>
@@ -129,7 +205,7 @@ if(strlen(($_POST["title"])) > 255){
                 <h6 class="text-lg text-gray-600 font-semibold">Add Post</h6>
                 </div>
 
-                                <div class="flex justify-between gap-4">
+                                <div class="flex flex-col md:flex-row justify-between gap-4">
                                     <div class="card w-full">
                                         <div class="card-body">
                                             <img src="../../../images/post.gif" class="">
@@ -177,13 +253,29 @@ if(strlen(($_POST["title"])) > 255){
                                                 <?php endforeach?>
                                                 </select>
                                             </div>
-                                            <button class="btn text-sm text-white font-medium w-fit hover:bg-blue-700" name="submit" type="submit">Submit</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                
-		</div>
+                                          <div class="w-full bg-white p-6 rounded shadow-md">
+                                              <label for="tags[]" class="block text-sm font-medium text-gray-700 mb-2">Select Tags</label>
+                                              <select id="tagSelector" name="tags[]" multiple="multiple" class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                                  <option value="" disabled selected>Choose a tag</option>
+                                                  <?php foreach ($tags as $tag) :?>
+                                                  <option value="<?= $tag['id_tag']?>"><?= $tag['name_tag']?></option>
+                                                  <?php endforeach?>
+                                              </select>
+
+                                              <!-- Display selected tags -->
+                                              <div id="selectedTags" class="mt-4 flex flex-wrap gap-2"></div>
+
+
+                                              <input type="hidden" name="tags[]" id="tagsInput">
+
+                                          </div>                                            
+    
+    <button class="btn text-sm text-white font-medium w-fit hover:bg-blue-700" name="submit" type="submit">Submit</button>
+    </form>
+      </div>
+        </div>
+          </div>
+                </div>
 		<!--end of project-->
 	</main>
 
@@ -219,6 +311,52 @@ function alertDelete(event, idCategory) {
     }
   });
 }
+
+        const tagSelector = document.getElementById('tagSelector');
+        const selectedTagsContainer = document.getElementById('selectedTags');
+        const tagsInput = document.getElementById('tagsInput');
+        let selectedTags = [];
+
+        // Handle the selection of tags
+        tagSelector.addEventListener('change', () => {
+            const selectedValue = tagSelector.value;
+
+            // Avoid duplicate tags
+            if (!selectedTags.includes(selectedValue)) {
+                selectedTags.push(selectedValue);
+                updateSelectedTagsUI();
+                updateHiddenInput();
+            }
+
+            // Reset select input to placeholder
+            tagSelector.value = "";
+        });
+
+        // Update the UI with selected tags
+        function updateSelectedTagsUI() {
+            selectedTagsContainer.innerHTML = ""; // Clear the container
+            selectedTags.forEach(tag => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full flex items-center gap-2';
+                tagElement.innerHTML = `
+                    <span>${tag}</span>
+                    <button type="button" class="text-indigo-700 hover:text-red-600" onclick="removeTag('${tag}')">x</button>
+                `;
+                selectedTagsContainer.appendChild(tagElement);
+            });
+        }
+
+        // Update the hidden input with all selected tags
+        function updateHiddenInput() {
+            tagsInput.value = selectedTags.join(","); // Store as a comma-separated string
+        }
+
+        // Remove a tag
+        function removeTag(tag) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            updateSelectedTagsUI();
+            updateHiddenInput();
+        }
 
 
 </script>

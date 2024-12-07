@@ -71,6 +71,7 @@ if(strlen(($_POST["name_tag"])) > 255){
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <!-- Core Css -->
 <link rel="stylesheet" href="../assets/css/theme.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .swal2-confirm {
@@ -119,7 +120,7 @@ if(strlen(($_POST["name_tag"])) > 255){
                 <h6 class="text-lg text-gray-600 font-semibold">Add Tags</h6>
                 </div>
 
-                                <div class="flex justify-between gap-4">
+                                <div class="flex flex-col md:flex-row justify-between gap-4">
                                     <div class="card w-full">
                                         <div class="card-body">
                                             <img src="../../../images/add.gif" class="">

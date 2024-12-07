@@ -810,6 +810,14 @@ select {
   padding: 1.5rem;
 }
 
+.medium-screen {
+  @media (min-width: 768px) {
+    .md\:flex-row {
+        flex-direction: row;
+    }
+}
+}
+
 .hs-dropdown-menu {
   position: relative;
   border-radius: 7px;

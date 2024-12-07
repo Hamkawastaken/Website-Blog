@@ -4,6 +4,7 @@ require_once __DIR__ . '../../../../Model/Model.php';
 require_once __DIR__ . '../../../../Model/Post.php';
 require_once __DIR__ . '../../../../Model/Category.php';
 require_once __DIR__ . '../../../../Model/Users.php';
+require_once __DIR__ . '../../../../Model/Tags.php';
 
 if(!isset($_SESSION["full_name"])) {
   header("Location: ../auth/login.php");
@@ -17,6 +18,9 @@ $detail_post = $posts->find($id);
 
 $categories = new Category();
 $categories = $categories->all();
+
+$tags = new Tags();
+$tags = $tags->all();
 
 $users = new User();
 $users = $users->all();
@@ -176,6 +180,22 @@ if ($result !== false) {
                                                 <?php endforeach?>
                                                 </select>
                                             </div>
+                                            <div class="w-full bg-white p-6 rounded shadow-md">
+                                                <label for="tags[]" class="block text-sm font-medium text-gray-700 mb-2">Select Tags</label>
+                                                <select id="tagSelector" name="tags[]" multiple="multiple" class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                                    <option value="" disabled selected>Choose a tag</option>
+                                                    <?php foreach ($tags as $tag) :?>
+                                                    <option value="<?= $tag['id_tag']?>"><?= $tag['name_tag']?></option>
+                                                    <?php endforeach?>
+                                                </select>
+
+                                                <!-- Display selected tags -->
+                                                <div id="selectedTags" class="mt-4 flex flex-wrap gap-2" value="<?= $detail_post[0]['tags']?>"></div>
+
+
+                                                <input type="hidden" name="tags[]" id="tagsInput">
+
+                                            </div>
                                             <button class="btn text-sm text-white font-medium w-fit hover:bg-blue-700" name="submit" type="submit">Submit</button>
                                             </form>
                                         </div>
@@ -205,6 +225,7 @@ if ($result !== false) {
 <script src="../assets/libs/@preline/dropdown/index.js"></script>
 <script src="../assets/libs/@preline/overlay/index.js"></script>
 <script src="../assets/js/sidebarmenu.js"></script>
+
 
 </body>
 
