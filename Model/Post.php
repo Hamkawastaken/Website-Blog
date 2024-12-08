@@ -31,7 +31,7 @@ class Post extends Model {
             }
 
             $name_file = uniqid() . "." . $ekstensi_file;
-            if(!move_uploaded_file($tmp_name, "../images/" . $name_file)) {
+            if(!move_uploaded_file($tmp_name, "/../images/" . $name_file)) {
                 return "Failed to upload file";
             }
 
@@ -41,7 +41,6 @@ class Post extends Model {
         $data = [
             'title' => $data['post']['title'],
             'content' => $data['post']['content'],
-            'attachment' => $data['post']['attachment'],
             'category_id' => $data['post']['category'],
             'user_id' => $data['post']['user_id']
         ];
@@ -160,5 +159,70 @@ class Post extends Model {
       $result = mysqli_query($this->db, $query);
       return $this->convertData($result);
     }
+
+    public function getPostsByTag($tag) {
+        $query = "SELECT posts.*, user.full_name, user.avatar, categories.name_category 
+                FROM posts 
+                JOIN user ON posts.user_id = user.id_user
+                JOIN categories ON posts.category_id = categories.id_category
+                JOIN pivot_posts_tags ON posts.id_post = pivot_posts_tags.post_id_pivot
+                JOIN tags ON pivot_posts_tags.tag_id_pivot = tags.id_tag
+                WHERE tags.name_tag = ?
+                ORDER BY posts.id_post DESC";
+        $stmt = mysqli_prepare($this->db, $query);
+        mysqli_stmt_bind_param($stmt, "s", $tag);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        return $this->convertData($result);
+    }
+
+public function getArticleCountByCategory() {
+        $sql = "SELECT category_id, COUNT(*) as total 
+                FROM posts 
+                GROUP BY category_id";
+        $result = mysqli_query($this->db, $sql);
+        
+        $counts = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $counts[$row['category_id']] = $row['total'];
+        }
+        
+        return $counts;
+    }
+
+    public function getPostsByCategory($category_id) {
+    $query = "SELECT posts.*, user.full_name, user.avatar, categories.name_category, 
+              GROUP_CONCAT(tags.name_tag SEPARATOR ', ') as tags
+              FROM posts 
+              JOIN user ON posts.user_id = user.id_user
+              JOIN categories ON posts.category_id = categories.id_category
+              LEFT JOIN pivot_posts_tags ON posts.id_post = pivot_posts_tags.post_id_pivot
+              LEFT JOIN tags ON pivot_posts_tags.tag_id_pivot = tags.id_tag
+              WHERE posts.category_id = ?
+              GROUP BY posts.id_post
+              ORDER BY posts.id_post DESC";
+              
+    $stmt = mysqli_prepare($this->db, $query);
+    mysqli_stmt_bind_param($stmt, "i", $category_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    return $this->convertData($result);
+}
+
+public function getTopAuthors($limit = 5) {
+    $sql = "SELECT u.id_user, u.full_name, u.avatar, COUNT(p.id_post) as post_count 
+            FROM user u
+            LEFT JOIN posts p ON u.id_user = p.user_id 
+            GROUP BY u.id_user
+            ORDER BY post_count DESC
+            LIMIT ?";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 
 }

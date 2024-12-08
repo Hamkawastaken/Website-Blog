@@ -4,15 +4,25 @@ require_once __DIR__ . '/../DB/Connection.php';
 require_once __DIR__ . '/../Model/Model.php';
 require_once __DIR__ . '/../Model/Post.php';
 require_once __DIR__ . '/../Model/Category.php';
-$posts = new Post();
-$posts = $posts->all_3(0, 1000);
 
-$categories = new Category();
-$categories = $categories->all();
+// Ambil category_id dari URL
+$category_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// Tambahkan method untuk menghitung artikel per kategori
+// Inisialisasi Post dan Category
+$postModel = new Post();
+$categoryModel = new Category();
+
+// Ambil posts berdasarkan category
+$posts = $postModel->getPostsByCategory($category_id);
+
+// Ambil detail kategori
+$category = $categoryModel->find($category_id);
+
+// Ambil semua kategori untuk sidebar
+$categories = $categoryModel->all();
+$articleCounts = $postModel->getArticleCountByCategory();
+
 $post = new Post();
-$articleCounts = $post->getArticleCountByCategory();
 $topAuthors = $post->getTopAuthors(5);
 
 
@@ -150,24 +160,20 @@ $topAuthors = $post->getTopAuthors(5);
               class="berita-pilihan flex flex-col md:flex-row justify-between items-center mt-12 md:mt-0">
               <div class="title">
                 <h1 class="text-[#595C5F] text-2xl font-bold">
-                  Berita Pilihan Hari Ini
+                  Artikel dengan Kategori: <?= htmlspecialchars($category[0]['name_category'] ?? 'Tidak Ditemukan') ?>
                 </h1>
               </div>
               <div class="navigasi flex flex-col md:flex-row gap-2 mt-4">
-                <a href="./index.php">
-                                  <button
+                <button
                   class="border border-[#14A7A0] bg-transparent text-[#14A7A0] rounded-lg px-2 py-1"
                 >
                   <i class="fa-solid fa-list mr-2"></i>Lihat Semua Berita
                 </button>
-                </a>
-                    <a href="./add-post.php">
-                                      <button
+                <button
                   class="text-white border border-[#14A7A0] bg-[#14A7A0] rounded-lg px-2 py-1"
                 >
                   <i class="fa-regular fa-square-plus mr-2"></i>Buat Berita
                 </button>
-                    </a>
               </div>
             </div>
 
@@ -175,62 +181,50 @@ $topAuthors = $post->getTopAuthors(5);
               class="berita-utama container px-4 md:px-0 mx-auto flex justify-between flex-col md:flex-row gap-x-4 items-start mt-5"
             >
               <div class="berita w-full md:min-w-[550px]">
-                <?php foreach($posts as $post): ?>
-                <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
-                  <div class="profile flex items-center">
-                    <div class="image">
-                      <img src="../images/<?= $post['avatar']?>" class="w-12 h-12 rounded-full object-cover mr-2" />
+                <?php if (empty($posts)): ?>
+                    <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
+                        <p class="text-center text-[#595C5F]">Belum ada artikel dalam kategori ini.</p>
                     </div>
-                    <div class="title flex flex-col ml-1">
-                      <h1 class="text-black font-bold text-sm md:text-base">
-                        <?= $post['full_name']?>
-                        <span class="text-[#595C5F] text-xs"
-                          >| <?= $post['name_category']?></span
-                        >
-                      </h1>
-                      <h1 class="text-[#595C5F] text-sm">7 November 2024</h1>
+                <?php else: ?>
+                    <?php foreach($posts as $post): ?>
+                    <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
+                        <div class="profile flex items-center">
+                            <div class="image">
+                                <img src="../images/<?= htmlspecialchars($post['avatar']) ?>" class="w-12 h-12 rounded-full object-cover mr-2" />
+                            </div>
+                            <div class="title flex flex-col ml-1">
+                                <h1 class="text-black font-bold text-sm md:text-base">
+                                    <?= htmlspecialchars($post['full_name']) ?>
+                                    <span class="text-[#595C5F] text-xs">| <?= htmlspecialchars($post['name_category']) ?></span>
+                                </h1>
+                                <h1 class="text-[#595C5F] text-sm">7 November 2024</h1>
+                            </div>
+                        </div>
+                        <div class="hero-image mt-4 -mx-4">
+                            <img src="../images/<?= htmlspecialchars($post['attachment']) ?>" class="w-full" />
+                        </div>
+                        <div class="tags flex gap-2 text-[#595C5F] mt-4 flex-wrap">
+                            <?php $tags = explode(',', $post['tags']); ?>
+                            <?php foreach($tags as $tag): ?>
+                                <?php if(trim($tag) !== ''): ?>
+                                <a href="tags.php?tag=<?= urlencode(trim($tag)) ?>">
+                                    <p class="border rounded-full px-4 py-1 text-xs">
+                                        #<?= htmlspecialchars(trim($tag)) ?>
+                                    </p>
+                                </a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="judul-berita mt-4">
+                            <a href="blog.php?id=<?= $post['id_post'] ?>" class="text-xl md:text-2xl font-bold">
+                                <?= htmlspecialchars($post['title']) ?>
+                            </a>
+                        </div>
                     </div>
-                  </div>
-                  <div class="hero-image mt-4 -mx-4">
-                    <img src="../images/<?= $post['attachment']?>" class="w-full" />
-                  </div>
-                  <div class="tags flex gap-2 text-[#595C5F] mt-4 flex-wrap">
-                    <?php $tags = explode(',', $post['tags']);?>
-                    <?php foreach($tags as $tag): ?>
-                    <a href="tags.php?tag=<?= urlencode(trim($tag)) ?>">
-                        <p class="border rounded-full px-4 py-1 text-xs">
-                            #<?= trim($tag) ?>
-                        </p>
-                    </a>
                     <?php endforeach; ?>
-                  </div>
-                  <div class="judul-berita mt-4">
-                    <a href="blog.php?id=<?= $post['id_post'] ?>" class="text-xl md:text-2xl font-bold">
-                      <?= $post['title']?>
-                    </a>
-                  </div>
-                  <!-- <div class="reaksi mt-4 flex justify-between">
-                    <div class="likecomment flex gap-x-4">
-                      <p class="text-xs text-[#595C5F]">
-                        <i class="fa-solid fa-heart text-red-500 mr-2"></i>200
-                        Reaksi
-                      </p>
-                      <p class="text-xs text-[#595C5F]">
-                        <i class="fa-solid fa-comment text-blue-500 mr-2"></i>76
-                        Komentar
-                      </p>
-                    </div>
-                    <div class="simpan">
-                      <p class="text-xs text-[#595C5F]">
-                        <i class="fa-solid fa-bookmark text-gray-500 mr-2"></i
-                        >Simpan
-                      </p>
-                    </div>
-                  </div> -->
-                </div>
-                <?php endforeach; ?>
+                <?php endif; ?>
               </div>
-              <div class="berita-aside w-full md:min-w-[265px]">
+<div class="berita-aside w-full md:min-w-[265px]">
                 <div
                   class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
                   <div class="title">

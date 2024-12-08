@@ -276,6 +276,7 @@ if(strlen(($_POST["title"])) > 255){
         </div>
           </div>
                 </div>
+                
 		<!--end of project-->
 	</main>
 

@@ -6,7 +6,6 @@ require_once __DIR__ . '../../Model/Users.php';
 
 // if(isset($_SESSION["full_name"])) {
 //     header("Location: index.php");
-//     exit;
 // }
 
 $user = new User();

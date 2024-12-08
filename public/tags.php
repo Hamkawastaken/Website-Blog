@@ -3,17 +3,14 @@
 require_once __DIR__ . '/../DB/Connection.php';
 require_once __DIR__ . '/../Model/Model.php';
 require_once __DIR__ . '/../Model/Post.php';
-require_once __DIR__ . '/../Model/Category.php';
+
+$tag = isset($_GET['tag']) ? trim($_GET['tag']) : '';
+
 $posts = new Post();
-$posts = $posts->all_3(0, 1000);
+$posts = $posts->getPostsByTag($tag);
 
-$categories = new Category();
-$categories = $categories->all();
-
-// Tambahkan method untuk menghitung artikel per kategori
-$post = new Post();
-$articleCounts = $post->getArticleCountByCategory();
-$topAuthors = $post->getTopAuthors(5);
+$tags = new Post();
+$tags = $tags->all_3(0, 100);
 
 
 ?>
@@ -150,24 +147,20 @@ $topAuthors = $post->getTopAuthors(5);
               class="berita-pilihan flex flex-col md:flex-row justify-between items-center mt-12 md:mt-0">
               <div class="title">
                 <h1 class="text-[#595C5F] text-2xl font-bold">
-                  Berita Pilihan Hari Ini
+                  Artikel dengan Tag: #<?= htmlspecialchars($tag) ?>
                 </h1>
               </div>
               <div class="navigasi flex flex-col md:flex-row gap-2 mt-4">
-                <a href="./index.php">
-                                  <button
+                <button
                   class="border border-[#14A7A0] bg-transparent text-[#14A7A0] rounded-lg px-2 py-1"
                 >
                   <i class="fa-solid fa-list mr-2"></i>Lihat Semua Berita
                 </button>
-                </a>
-                    <a href="./add-post.php">
-                                      <button
+                <button
                   class="text-white border border-[#14A7A0] bg-[#14A7A0] rounded-lg px-2 py-1"
                 >
                   <i class="fa-regular fa-square-plus mr-2"></i>Buat Berita
                 </button>
-                    </a>
               </div>
             </div>
 
@@ -175,7 +168,7 @@ $topAuthors = $post->getTopAuthors(5);
               class="berita-utama container px-4 md:px-0 mx-auto flex justify-between flex-col md:flex-row gap-x-4 items-start mt-5"
             >
               <div class="berita w-full md:min-w-[550px]">
-                <?php foreach($posts as $post): ?>
+                <?php foreach($posts as $index => $post): ?>
                 <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
                   <div class="profile flex items-center">
                     <div class="image">
@@ -195,8 +188,8 @@ $topAuthors = $post->getTopAuthors(5);
                     <img src="../images/<?= $post['attachment']?>" class="w-full" />
                   </div>
                   <div class="tags flex gap-2 text-[#595C5F] mt-4 flex-wrap">
-                    <?php $tags = explode(',', $post['tags']);?>
-                    <?php foreach($tags as $tag): ?>
+                    <?php $postTags = explode(',', $tags[$index]['tags']); ?>
+                    <?php foreach($postTags as $tag): ?>
                     <a href="tags.php?tag=<?= urlencode(trim($tag)) ?>">
                         <p class="border rounded-full px-4 py-1 text-xs">
                             #<?= trim($tag) ?>
@@ -234,37 +227,103 @@ $topAuthors = $post->getTopAuthors(5);
                 <div
                   class="card bg-white py-4 px-4 mb-4 w-full rounded-lg border">
                   <div class="title">
-                    <h2 class="font-bold text-lg">Daftar Kategori</h2>
-                    <?php foreach($categories as $category): ?>
-                    <div class="berita group">
+                    <h2 class="font-bold text-lg">Sedang Ramai</h2>
+                    <div class="berita-1 group">
                       <div class="flex flex-col">
-                        <a href="category.php?id=<?= $category['id_category'] ?>" class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out">
-                          <?= $category['name_category']?>
-                        </a>
-                        <p class="text-[#595C5F] text-xs mt-1 group-hover:text-black transition-all ease-in-out">
-                          <?= $articleCounts[$category['id_category']] ?? 0 ?> Total Articles
-                        </p>
+                        <a
+                          href=""
+                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
+                          >Tutorial Membuat Full Stack Application dengan Node
+                          JS Express dan MySQL</a
+                        >
+                        <a
+                          href=""
+                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
+                          >24 Reactions • 6 Comments</a
+                        >
                       </div>
                       <hr class="mt-4" />
                     </div>
-                    <?php endforeach; ?>
+                    <div class="berita-2 group">
+                      <div class="flex flex-col">
+                        <a
+                          href=""
+                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
+                          >Apa Itu CORS? Panduan Lengkap untuk Pemula Dalam Pengembangan Web</a
+                        >
+                        <a
+                          href=""
+                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
+                          >34 Reactions • 8 Comments</a
+                        >
+                      </div>
+                      <hr class="mt-4" />
+                    </div>
+                    <div class="berita-3 group">
+                      <div class="flex flex-col">
+                        <a
+                          href=""
+                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
+                          >Kamu Anak IT? Bingung Cari Topik Tugas Akhir? Sini Saya BantuL</a
+                        >
+                        <a
+                          href=""
+                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
+                          >56 Reactions • 9 Comments</a
+                        >
+                      </div>
+                      <hr class="mt-4" />
+                    </div>
+                    <div class="berita-4 group">
+                      <div class="flex flex-col">
+                        <a
+                          href=""
+                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
+                          >Gmail Kini Hadirkan AI untuk Bantu Tulis Email Lebih Mudah!</a
+                        >
+                        <a
+                          href=""
+                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
+                          >12 Reactions • 2 Comments</a
+                        >
+                      </div>
+                      <hr class="mt-4" />
+                    </div>
                   </div>
                 </div>
 
                 <div class="user-teraktif">
                     <h1 class="text-[#595C5F] text-xl font-bold">Author Teraktif</h1>
                     <p class="text-[#595C5F] text-sm mt-1">Menulis berita <span class="text-[#14A7A0]">paling banyak</span></p>
-                    
-                    <?php foreach($topAuthors as $index => $author): ?>
-                    <div class="user">
+
+                    <div class="user-1">
                         <div class="card relative py-2 px-4 mt-6 bg-white rounded-xl flex items-center gap-x-2">
-                            <img src="../images/<?= $author['avatar'] ?? 'default-avatar.jpg' ?>" class="w-12 h-12 object-cover rounded-full">
-                            <h1 class="text-[#595C5F] font-bold"><?= $author['full_name'] ?></h1>
-                            <span class="absolute -top-3 -left-2 bg-white border rounded-lg px-2"><?= $index + 1 ?></span>
-                            <span class="text-sm text-[#14A7A0] ml-auto"><?= $author['post_count'] ?> artikel</span>
+                            <img src="../images/user1.png" class="w-12 h-12">
+                            <h1 class="text-[#595C5F] font-bold">Muhammad Hamka</h1>
+                            <span class="absolute -top-3 -left-2 bg-white border rounded-lg px-2">1</span>
                         </div>
                     </div>
-                    <?php endforeach; ?>
+                    <div class="user-2">
+                        <div class="card relative py-2 px-4 mt-4 bg-white rounded-xl flex items-center gap-x-2">
+                            <img src="../images/profile01.jpg" class="w-12 h-12 rounded-full mr-2">
+                            <h1 class="text-[#595C5F] font-bold">Gojou Satoru</h1>
+                            <span class="absolute -top-3 -left-2 bg-white border rounded-lg px-2">2</span>
+                        </div>
+                    </div>
+                    <div class="user-3">
+                        <div class="card relative py-2 px-4 mt-4 bg-white rounded-xl flex items-center gap-x-2">
+                            <img src="../images/profile02.jpg" class="w-12 h-12 rounded-full mr-2">
+                            <h1 class="text-[#595C5F] font-bold">Zahra</h1>
+                            <span class="absolute -top-3 -left-2 bg-white border rounded-lg px-2">3</span>
+                        </div>
+                    </div>
+                    <div class="user-4">
+                        <div class="card relative py-2 px-4 mt-4 bg-white rounded-xl flex items-center gap-x-2">
+                            <img src="../images/profile03.jpg" class="w-12 h-12 rounded-full mr-2">
+                            <h1 class="text-[#595C5F] font-bold">Kibutsuji Muzan</h1>
+                            <span class="absolute -top-3 -left-2 bg-white border rounded-lg px-2">4</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div
