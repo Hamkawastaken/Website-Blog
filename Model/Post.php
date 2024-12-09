@@ -253,4 +253,27 @@ public function getTopAuthors($limit = 5) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 
+public function getPostsByAuthor($author_id, $limit = 5) {
+    $query = "SELECT 
+                p.id_post as id,
+                p.title,
+                p.content,
+                p.attachment,
+                p.created_at,
+                u.full_name,
+                u.avatar
+              FROM posts p 
+              JOIN user u ON p.user_id = u.id_user 
+              WHERE p.user_id = ? 
+              ORDER BY p.created_at DESC 
+              LIMIT ?";
+              
+    $stmt = $this->db->prepare($query);
+    $stmt->bind_param("ii", $author_id, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
 }

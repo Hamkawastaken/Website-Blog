@@ -124,7 +124,7 @@ if(strlen(($_POST["name_category"])) > 255){
                                 <div class="flex flex-col md:flex-row justify-between gap-4">
                                     <div class="card w-full">
                                         <div class="card-body">
-                                            <img src="../../../images/document.gif" class="">
+                                            <img src="../../../images/edit.gif" class="">
                                         </div>
                                     </div>
                                     <div class="card w-full">

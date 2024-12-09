@@ -1,10 +1,27 @@
 <?php
-session_start();
 require_once __DIR__ . '../../DB/Connection.php';
+require_once __DIR__ . '../../Model/Model.php';
+require_once __DIR__ . '../../Model/Post.php';
 
-// Debug session
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
+// Sesuaikan dengan struktur session yang ada
+$loggedInUser = null;
+if (isset($_SESSION['id_user'])) {
+    $loggedInUser = [
+        'id' => $_SESSION['id_user'],
+        'full_name' => $_SESSION['full_name'],
+        'avatar' => $_SESSION['avatar'],
+        // Level bisa ditambahkan nanti jika ada
+    ];
+}
+
+// Debug untuk melihat isi session
+// var_dump($_SESSION);
+
+// Tambahkan ini untuk debugging
+if (!$loggedInUser) {
+    // echo "User belum login";
+}
 
 // Inisialisasi koneksi database menggunakan class Connection
 $connection = new Connection();
@@ -34,6 +51,30 @@ if ($result->num_rows > 0) {
     $likes_count = 0;
     $bookmarks_count = 0;
 }
+
+$id = $_GET['id'];
+
+$posts = new Post(); 
+$detail_post = $posts->find($id);
+
+$post_tag = new Post();
+$articleCounts = $post_tag->getArticleCountByCategory();
+$topAuthors = $post_tag->getTopAuthors(5);
+
+$post = new Post();
+$post = $post->all_3(0, 1000);
+
+// var_dump($post);
+// die;
+
+
+// Tambahkan query untuk mengambil artikel dari author yang sama
+$author_id = $post[0]['id_user']; // ambil ID user dari artikel yang sedang dibaca
+$other_posts = new Post();
+$author_posts = $other_posts->getPostsByAuthor($author_id, 5); // ambil 5 artikel terbaru
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -143,139 +184,122 @@ if ($result->num_rows > 0) {
                     <div class="navigasi flex px-4 md:px-0">
                         <a href="index.php" class="text-[#14A7A0] text-sm md:text-base">Home</a>
                         <p class="mx-2 text-sm md:text-base">></p>
-                        <p class="text-[#595c5f] text-sm md:text-base truncate">10 Kesalahan Umum Programmer Pemula (Jangan Sampai
-                        Terjebak!)</p>
+                        <p class="text-[#595c5f] text-sm md:text-base truncate"><?= $detail_post[0]['title'] ?></p>
                     </div>
                     <hr class="mx-4 md:mx-0 font-bold my-4">
                     <div class="tags flex gap-x-2 px-4 md:px-0">
-                        <a href="index.html" class="text-[#595c5f] text-sm md:text-base">#programming</a>
-                        <a href="index.html" class="text-[#595c5f] text-sm md:text-base">#coding</a>
-                        <a href="index.html" class="text-[#595c5f] text-sm md:text-base">#tips</a>
-                        <a href="index.html" class="text-[#595c5f] text-sm md:text-base">#website</a>
+                    <?php 
+                    if (isset($post[0]['tags']) && !empty($post[0]['tags'])) {
+                        $tags = explode(',', $post[0]['tags']);
+                        foreach($tags as $tag): 
+                            $tag = trim($tag);
+                            if (!empty($tag)):
+                    ?>
+                            <a href="tags.php?tag=<?= urlencode($tag) ?>" class="hover:bg-gray-100 transition-all duration-200">
+                                <p class="border border-[#14A7A0] text-[#14A7A0] rounded-full px-4 py-1 text-xs">
+                                    #<?= htmlspecialchars($tag) ?>
+                                </p>
+                            </a>
+                    <?php 
+                            endif;
+                        endforeach;
+                    }
+                    ?>
                     </div>
                     <hr class="mx-4 md:mx-0 font-bold my-4">
-                    <div class="reaction mt-4 flex justify-between px-4 md:px-0">
-                        <div class="likecomment flex gap-x-4">
-                            <p class="text-xs text-[#595C5F]">
-                            <i class="fa-solid fa-heart text-red-500 mr-2"></i>200 Reaksi
-                            </p>
-                            <p class="text-xs text-[#595C5F]">
-                            <i class="fa-solid fa-comment text-blue-500 mr-2"></i>76 Komentar
-                            </p>
-                        </div>
-                    </div>
                     <div class="title mt-4 px-4 md:px-0">
-                        <h1 class="text-[#595C5F] text-2xl md:text-3xl font-bold line-clamp-3">10 Kesalahan Umum Programmer Pemula (Jangan Sampai Terjebak!)</h1>
+                        <h1 class="text-[#595C5F] text-2xl md:text-3xl font-bold line-clamp-3"><?= $detail_post[0]['title'] ?></h1>
                     </div>
                     <div class="author flex gap-x-2 items-center my-4 px-4 md:px-0">
-                        <div class="author-image"><img src="../images/profile01.jpg" class="w-8 h-8 rounded-full"></div>
+                        <div class="author-image"><img src="../images/<?= $post[0]['avatar']?>" class="w-8 h-8 rounded-full object-cover"></div>
                         <div class="author-info flex flex-col">
                             <h1 class="text-[#595C5F] font-semibold text-sm md:text-base">
-                            Muhammad Hamka
-                            <span class="text-[#595C5F] font-extralight text-xs">| 4 November 2024</span>
+                            <?= $post[0]['full_name']?>
+                            <span class="text-[#595C5F] font-extralight text-xs">| <?= date('d F Y', strtotime($post[0]['created_at'])) ?></span>
                             </h1>
                         </div>
                     </div>
                     <div class="hero-image px-4 md:px-0">
-                        <img src="../images/programmer1.png" class="rounded-xl">
+                        <img src="../images/<?= $detail_post[0]['attachment']?>" class="rounded-xl">
                     </div>
                     <div class="px-4 md:px-0">
-                        <p class="text-base md:text-lg mt-4">Halo, teman-teman! Selamat datang di dunia pemrograman! Meskipun menarik, perjalanan ini juga penuh dengan tantangan. Untuk membantu Anda menghindari beberapa jebakan, berikut adalah sepuluh kesalahan umum yang sering dilakukan oleh programmer pemula, beserta cara untuk menghindarinya.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">1. Tidak Belajar Bahasa Inggris</h1>
-                        <p class="text-base md:text-lg mt-4">Bahasa Inggris adalah bahasa utama yang digunakan dalam pemrograman. Sebagian besar dokumentasi, pesan error, dan forum bantuan menggunakan bahasa ini. Oleh karena itu, penting untuk mempelajari bahasa Inggris, terutama istilah-istilah teknis, agar Anda dapat memahami kesalahan yang terjadi dan mencari solusi yang tepat.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">2. Malas Membaca Pesan Error</h1>
-                        <p class="text-base md:text-lg mt-4">Seringkali, programmer pemula langsung merasa panik saat menemukan pesan error. Namun, penting untuk meluangkan waktu untuk membaca dan memahami pesan tersebut. Pesan error biasanya memberikan petunjuk yang berguna mengenai penyebab masalah, sehingga Anda dapat mendiagnosis dan menyelesaikan permasalahan lebih cepat.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">3. Mengabaikan Dokumentasi Resmi</h1>
-                        <p class="text-base md:text-lg mt-4">Dokumentasi resmi adalah sumber informasi yang sangat berharga. Di dalamnya terdapat panduan penggunaan, versi terkini, dan informasi penting lainnya. Membaca dokumentasi resmi akan membantu Anda memahami fitur dan fungsi teknologi yang Anda gunakan, sehingga mengurangi kemungkinan kesalahan.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">4. Menghafal Kode, Bukan Memahami Konsep</h1>
-                        <p class="text-base md:text-lg mt-4">Pemrograman bukanlah tentang menghafal kode. Sebaliknya, penting untuk memahami konsep dasar seperti variabel dan fungsi. Dengan pemahaman yang kuat, Anda akan lebih mudah mencari solusi di internet dan menerapkannya dalam proyek Anda.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">5. Tidak Memahami Konsep Fundamental</h1>
-                        <p class="text-base md:text-lg mt-4">Sebagai pemula, sangat penting untuk memahami konsep-konsep dasar pemrograman, seperti struktur data dan algoritma. Memiliki pemahaman yang kuat tentang dasar-dasar ini akan memudahkan Anda ketika menghadapi tantangan yang lebih kompleks di kemudian hari.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">6. Tidak Mengenal Tools Pendukung</h1>
-                        <p class="text-base md:text-lg mt-4">Tools seperti code editor, web browser, dan developer tools sangat penting dalam proses pengembangan. Memahami dan mengenali tools ini akan meningkatkan produktivitas dan efisiensi Anda. Luangkan waktu untuk mempelajari cara menggunakan tools tersebut secara optimal.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">7. Mengabaikan Version Control System (VCS)</h1>
-                        <p class="text-base md:text-lg mt-4">Version control system, seperti GitHub, adalah alat yang sangat penting untuk menyimpan dan mengelola kode. VCS memungkinkan Anda untuk melacak perubahan, mengembalikan versi sebelumnya, dan berkolaborasi dengan tim. Oleh karena itu, pelajari dasar-dasar Git dan manfaatkan platform seperti GitHub untuk proyek Anda.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">8. Terjebak di Tutorial Hell</h1>
-                        <p class="text-base md:text-lg mt-4">Banyak programmer pemula terjebak dalam siklus menonton tutorial tanpa berani mencoba membuat proyek sendiri. Untuk menghindari hal ini, lakukan empat langkah berikut:
-                        Tonton dan pahami tutorial hingga selesai.Ketik kode sambil mem-pause video untuk memahami setiap barisnya.Cobalah untuk membuat sesuatu tanpa menonton tutorial.Buat proyek yang berbeda dan unik sebagai latihan.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">9. Kurangnya Kepercayaan Diri</h1>
-                        <p class="text-base md:text-lg mt-4">Sering kali, programmer pemula merasa tidak percaya diri dengan hasil karyanya. Penting untuk diingat bahwa tidak ada proyek yang sempurna pada awalnya. Beri diri Anda waktu untuk berkembang dan hargai setiap kemajuan yang Anda capai dalam perjalanan belajar ini.</p>
-                        <h1 class="text-black font-bold text-xl md:text-2xl mt-4">10. Membandingkan Diri dengan Orang Lain</h1>
-                        <p class="text-base md:text-lg mt-4">Membandingkan diri Anda dengan orang lain hanya akan menimbulkan perasaan tidak percaya diri. Setiap orang memiliki perjalanan yang berbeda dalam belajar pemrograman. Fokuslah pada perkembangan Anda sendiri dan hargai setiap pencapaian yang telah Anda raih.</p>
-                        <p class="text-base md:text-lg mt-4">Nah, itu dia 10 kesalahan yang sering dilakukan oleh programmer pemula. Ingat, belajar itu proses, jadi nikmati setiap langkah yang kamu ambil! Semoga bermanfaat dan happy coding!</p>
+                        <h1 class="text-[#595c5f] text-sm md:text-base mt-4"><?= $detail_post[0]['content'] ?></h1>
                     </div>
                 </div>
             </main>
 
             <aside class="md:w-1/3 w-full mx-auto px-2">
                 <div class="author-blog bg-white pb-4 rounded-lg">
-                  <div class="bg-[#EAEEF3] w-full h-16 rounded-t-lg"></div>
-                  <a href="" class="flex justify-center items-center"><img src="../images/user1.png" class="w-24 h-24 -mt-12 rounded-full"></a>
-                  <h2 class="text-center text-black font-bold text-lg mx-4">MUHAMMAD HAMKA RIFAI</h2>
-                  <p class="bg-[#14A7A0] text-white w-fit mx-auto px-2 py-1 rounded-full text-center text-xs font-bold mt-2 mb-4">ROOKIE III</p>
+                    <div class="bg-[#EAEEF3] w-full h-16 rounded-t-lg"></div>
+                    <?php if ($loggedInUser): ?>
+                        <a href="detail-author.php?id=<?= $loggedInUser['id'] ?>" class="flex justify-center items-center">
+                            <img src="../images/<?= $loggedInUser['avatar'] ?>" 
+                                 class="w-24 h-24 -mt-12 rounded-full object-cover">
+                        </a>
+                        <h2 class="text-center text-black font-bold text-lg mx-4">
+                            <?= strtoupper($loggedInUser['full_name']) ?>
+                        </h2>
+                        <p class="bg-[#14A7A0] text-white w-fit mx-auto px-2 py-1 rounded-full text-center text-xs font-bold mt-2 mb-4">
+                            <?= strtoupper('ROOKIE I') // Default level karena belum ada di session ?>
+                        </p>
+                    <?php else: ?>
+                        <div class="text-center px-4 py-6">
+                            <p class="text-gray-600 mb-4">Silakan login untuk melihat profil Anda</p>
+                            <a href="login.php" class="bg-[#14A7A0] text-white px-4 py-2 rounded-full text-sm hover:bg-[#118F89]">
+                                Login
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg mt-3">
                   <div class="title">
-                    <h2 class="font-bold text-lg">Lainnya Dari MUHAMMAD HAMKA RIFAI</h2>
-                    <div class="berita-1 group">
-                      <div class="flex flex-col">
-                        <a href="" class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out">Tutorial Membuat Full Stack Application dengan Node JS Express dan MySQL</a>
-                        <a href="" class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out">24 Reactions • 6 Comments</a>
-                      </div>
-                      <hr class="mt-4" />
-                    </div>
-                    <div class="berita-2 group">
-                      <div class="flex flex-col">
-                        <a
-                          href=""
-                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
-                          >Apa Itu CORS? Panduan Lengkap untuk Pemula Dalam Pengembangan Web</a
-                        >
-                        <a
-                          href=""
-                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
-                          >34 Reactions • 8 Comments</a
-                        >
-                      </div>
-                      <hr class="mt-4" />
-                    </div>
+                    <h2 class="font-bold text-lg">Lainnya Dari <?= strtoupper($post[0]['full_name']) ?></h2>
+                    <?php foreach($author_posts as $author_post): ?>
+                        <?php if($author_post['id'] != $post_id): ?> <!-- Skip artikel yang sedang dibaca -->
+                            <div class="berita group">
+                                <div class="flex flex-col">
+                                    <a href="blog.php?id=<?= $author_post['id'] ?>" 
+                                       class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out">
+                                        <?= $author_post['title'] ?>
+                                    </a>
+                                    <span class="text-[#595C5F] text-sm mt-1">
+                                        <?= date('d M Y', strtotime($author_post['created_at'])) ?>
+                                    </span>
+                                </div>
+                                <hr class="mt-4" />
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    
+                    <?php if(count($author_posts) <= 1): ?>
+                        <p class="text-[#595C5F] mt-4 text-sm">Belum ada artikel lain dari penulis ini.</p>
+                    <?php endif; ?>
                   </div>
                 </div>
 
                 <div class="card bg-white py-4 px-4 mb-4 w-full rounded-lg mt-3">
                   <div class="title">
                     <h2 class="font-bold text-lg">Berita Terbaru</h2>
-                    <div class="berita-3 group">
-                      <div class="flex flex-col">
-                        <a
-                          href=""
-                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
-                          >Kamu Anak IT? Bingung Cari Topik Tugas Akhir? Sini Saya BantuL</a
-                        >
-                        <a
-                          href=""
-                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
-                          >56 Reactions • 9 Comments</a
-                        >
+                    <?php 
+                    // Ambil 5 berita terbaru dari array $post yang sudah ada
+                    $latest_posts = array_slice($post, 0, 5);
+                    
+                    foreach($latest_posts as $latest): 
+                    ?>
+                      <div class="berita-3 group">
+                        <div class="flex flex-col">
+                          <a
+                            href="blog.php?id=<?= $latest['id_post'] ?>"
+                            class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
+                          ><?= $latest['title'] ?></a>
+                          <span class="text-[#595C5F] text-sm mt-1">
+                            <?= date('d M Y', strtotime($latest['created_at'])) ?>
+                          </span>
+                        </div>
+                        <hr class="mt-4" />
                       </div>
-                      <hr class="mt-4" />
-                    </div>
-                    <div class="berita-4 group">
-                      <div class="flex flex-col">
-                        <a
-                          href=""
-                          class="text-[#595C5F] mt-4 font-bold group-hover:text-black transition-all ease-in-out"
-                          >Gmail Kini Hadirkan AI untuk Bantu Tulis Email Lebih Mudah!</a
-                        >
-                        <a
-                          href=""
-                          class="text-[#595C5F] text-sm mt-1 group-hover:text-black transition-all ease-in-out"
-                          >12 Reactions • 2 Comments</a
-                        >
-                      </div>
-                      <hr class="mt-4" />
-                    </div>
+                    <?php endforeach; ?>
                   </div>
                 </div>
 
