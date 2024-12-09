@@ -1,3 +1,41 @@
+<?php
+session_start();
+require_once __DIR__ . '../../DB/Connection.php';
+
+// Debug session
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Inisialisasi koneksi database menggunakan class Connection
+$connection = new Connection();
+$conn = $connection->db;
+
+// Ambil post_id dari URL atau sesuaikan dengan kebutuhan
+$post_id = isset($_GET['id']) ? $_GET['id'] : 1; // default ke 1 jika tidak ada
+
+// Ambil data interaksi dari database
+$query = "SELECT likes_count, bookmarks_count FROM post_interactions WHERE post_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $post_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $likes_count = $row['likes_count'];
+    $bookmarks_count = $row['bookmarks_count'];
+} else {
+    // Jika belum ada data, buat data baru
+    $query = "INSERT INTO post_interactions (post_id, likes_count, bookmarks_count) VALUES (?, 0, 0)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $post_id);
+    $stmt->execute();
+    
+    $likes_count = 0;
+    $bookmarks_count = 0;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,6 +48,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </head>
   <body class="bg-[#F8F9FA] font-opensans overflow-x-hidden">
     <nav>
@@ -65,31 +104,36 @@
     <section class="blog">
         <div class="container mx-auto flex flex-col md:flex-row gap-2 max-w-screen-lg mt-12 mb-24">
 
-        <aside class="w-full md:overflow-hidden flex justify-center md:w-1/12">
-            <div class="card flex md:flex-col w-fit gap-x-8 mx-auto bg-white rounded-xl border md:fixed py-4 px-4 md:p-4">
+        <aside class="w-full md:w-1/12">
+            <div class="card flex md:flex-col w-fit h-fit gap-x-8 mx-auto bg-white rounded-xl border md:sticky md:top-4 py-4 px-4 md:p-4">
+                <!-- Like Button -->
                 <div class="like flex flex-col justify-center items-center md:my-2 group">
-                    <a href="" class="rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
+                    <a href="javascript:void(0)" 
+                       onclick="handleInteraction(<?php echo $post_id; ?>, 'like')" 
+                       class="like-button rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
                         <i class="fa-solid fa-heart text-[#595c5f] group-hover:text-white transition-all ease-in-out"></i>
                     </a>
-                    <p class="text-[#595c5f] mt-1">6</p>
+                    <p class="text-[#595c5f] mt-1 likes-count"><?php echo $likes_count; ?></p>
                 </div>
-                <div class="comment flex flex-col justify-center items-center md:my-2 group">
-                    <a href="" class="rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
-                        <i class="fa-solid fa-comment text-[#595c5f] group-hover:text-white transition-all ease-in-out"></i>
-                    </a>
-                    <p class="text-[#595c5f] mt-1">6</p>
-                </div>
+
+                <!-- Bookmark Button -->
                 <div class="bookmark flex flex-col justify-center items-center md:my-2 group">
-                    <a href="" class="rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
+                    <a href="javascript:void(0)" 
+                       onclick="handleInteraction(<?php echo $post_id; ?>, 'bookmark')" 
+                       class="bookmark-button rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
                         <i class="fa-solid fa-bookmark text-[#595c5f] group-hover:text-white transition-all ease-in-out"></i>
                     </a>
-                    <p class="text-[#595c5f] mt-1">6</p>
+                    <p class="text-[#595c5f] mt-1 bookmarks-count"><?php echo $bookmarks_count; ?></p>
                 </div>
+
+                <!-- Share Button -->
                 <div class="share flex flex-col justify-center items-center md:my-2 group">
-                    <a href="" class="rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
+                    <a href="javascript:void(0)" 
+                       onclick="handleShare()" 
+                       class="share-button rounded-full border border-[#595C5F] group-hover:bg-[#595c5f] transition-all ease-in-out py-2 px-3">
                         <i class="fa-solid fa-share text-[#595c5f] group-hover:text-white transition-all ease-in-out"></i>
                     </a>
-                    <p class="text-[#595c5f] mt-1">6</p>
+                    <p class="text-[#595c5f] mt-1">Share</p>
                 </div>
             </div>
         </aside>
@@ -97,7 +141,7 @@
             <main class="w-full mx-auto px-2">
                 <div class="card bg-white rounded-lg border md:px-10 py-6">
                     <div class="navigasi flex px-4 md:px-0">
-                        <a href="index.html" class="text-[#14A7A0] text-sm md:text-base">Home</a>
+                        <a href="index.php" class="text-[#14A7A0] text-sm md:text-base">Home</a>
                         <p class="mx-2 text-sm md:text-base">></p>
                         <p class="text-[#595c5f] text-sm md:text-base truncate">10 Kesalahan Umum Programmer Pemula (Jangan Sampai
                         Terjebak!)</p>
@@ -308,5 +352,115 @@
 
     
     <script src="script.js"></script>
+    <script>
+    function handleInteraction(postId, action) {
+        console.log('Function called:', postId, action); // Debug log
+
+        const button = action === 'like' ? 
+            document.querySelector('.like-button') : 
+            document.querySelector('.bookmark-button');
+        
+        console.log('Button found:', button); // Debug log
+
+        fetch('interaction_handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `post_id=${postId}&action=${action}`
+        })
+        .then(response => {
+            console.log('Raw response:', response); // Debug log
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Debug log
+            
+            if (data.success) {
+                // Update tampilan counter
+                if (action === 'like') {
+                    document.querySelector('.likes-count').textContent = data.likes_count;
+                } else if (action === 'bookmark') {
+                    document.querySelector('.bookmarks-count').textContent = data.bookmarks_count;
+                }
+                
+                // Toggle kelas active berdasarkan status
+                if (data.is_active) {
+                    button.classList.add('bg-[#595c5f]');
+                    button.querySelector('i').classList.add('text-white');
+                } else {
+                    button.classList.remove('bg-[#595c5f]');
+                    button.querySelector('i').classList.remove('text-white');
+                }
+            } else {
+                if (data.message === 'Silakan login terlebih dahulu') {
+                    Swal.fire({
+                        title: 'Perhatian!',
+                        text: 'Silakan login terlebih dahulu untuk melakukan interaksi',
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#14A7A0'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Gagal memperbarui interaksi',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#14A7A0'
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'Terjadi kesalahan saat memproses permintaan',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#14A7A0'
+            });
+        });
+    }
+
+    // Tambahkan event listener untuk debugging
+    document.addEventListener('DOMContentLoaded', function() {
+        const likeButton = document.querySelector('.like-button');
+        const bookmarkButton = document.querySelector('.bookmark-button');
+        
+        console.log('Like button found:', likeButton);
+        console.log('Bookmark button found:', bookmarkButton);
+    });
+
+    function handleShare() {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                url: window.location.href
+            })
+            .then(() => {
+                const shareButton = document.querySelector('.share-button');
+                shareButton.classList.add('bg-[#595c5f]');
+                shareButton.querySelector('i').classList.add('text-white');
+                setTimeout(() => {
+                    shareButton.classList.remove('bg-[#595c5f]');
+                    shareButton.querySelector('i').classList.remove('text-white');
+                }, 1000);
+            })
+            .catch(error => console.error('Error sharing:', error));
+        } else {
+            // Fallback untuk browser yang tidak mendukung Web Share API
+            const url = window.location.href;
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = url;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('URL telah disalin ke clipboard!');
+        }
+    }
+    </script>
 </body>
 </html>

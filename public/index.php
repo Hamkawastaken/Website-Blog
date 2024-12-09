@@ -122,7 +122,7 @@ $topAuthors = $post->getTopAuthors(5);
                   </li>
                   <?php if(!isset($_SESSION['id_user'])): ?>
                     <li class="px-6 text-[#595C5F] font-semibold">
-                      <a href="register.php"
+                      <a href="login.php"
                         ><i class="fa-solid fa-right-to-bracket mr-2"></i>Login</a
                       >
                     </li>
@@ -188,7 +188,9 @@ $topAuthors = $post->getTopAuthors(5);
                           >| <?= $post['name_category']?></span
                         >
                       </h1>
-                      <h1 class="text-[#595C5F] text-sm">7 November 2024</h1>
+                      <h1 class="text-[#595C5F] text-sm">
+                        <?= date('d F Y', strtotime($post['created_at'])) ?>
+                      </h1>
                     </div>
                   </div>
                   <div class="hero-image mt-4 -mx-4">

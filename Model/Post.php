@@ -154,10 +154,38 @@ class Post extends Model {
 
     public function all_3($start, $limit)
     {
-      // ambil semua data post dengan semua tag yan ada di pivot_posts_tags
-      $query = "SELECT categories.id_category, categories.name_category, user.id_user, user.full_name, user.password, user.email, user.bio, user.title, user.gender, user.avatar, user.phone, posts.id_post, posts.title, posts.content, posts.attachment, posts.user_id, posts.category_id, GROUP_CONCAT(tags.name_tag SEPARATOR ', ') AS tags FROM posts JOIN pivot_posts_tags ON posts.id_post = pivot_posts_tags.post_id_pivot JOIN tags ON pivot_posts_tags.tag_id_pivot = tags.id_tag JOIN categories ON posts.category_id = categories.id_category JOIN user ON posts.user_id = user.id_user WHERE posts.id_post = pivot_posts_tags.post_id_pivot GROUP BY posts.id_post, posts.title, posts.attachment, posts.content, categories.name_category, user.full_name, user.avatar LIMIT $start, $limit";
-      $result = mysqli_query($this->db, $query);
-      return $this->convertData($result);
+        // ambil semua data post dengan semua tag yan ada di pivot_posts_tags
+        $query = "SELECT 
+            categories.id_category, 
+            categories.name_category, 
+            user.id_user, 
+            user.full_name, 
+            user.password, 
+            user.email, 
+            user.bio, 
+            user.title, 
+            user.gender, 
+            user.avatar, 
+            user.phone, 
+            posts.id_post, 
+            posts.title, 
+            posts.content, 
+            posts.attachment, 
+            posts.user_id, 
+            posts.category_id,
+            posts.created_at,
+            GROUP_CONCAT(tags.name_tag SEPARATOR ', ') AS tags 
+        FROM posts 
+        JOIN pivot_posts_tags ON posts.id_post = pivot_posts_tags.post_id_pivot 
+        JOIN tags ON pivot_posts_tags.tag_id_pivot = tags.id_tag 
+        JOIN categories ON posts.category_id = categories.id_category 
+        JOIN user ON posts.user_id = user.id_user 
+        WHERE posts.id_post = pivot_posts_tags.post_id_pivot 
+        GROUP BY posts.id_post, posts.title, posts.attachment, posts.content, posts.created_at, categories.name_category, user.full_name, user.avatar 
+        LIMIT $start, $limit";
+        
+        $result = mysqli_query($this->db, $query);
+        return $this->convertData($result);
     }
 
     public function getPostsByTag($tag) {
